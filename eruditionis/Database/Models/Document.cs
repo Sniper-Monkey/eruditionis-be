@@ -9,7 +9,8 @@
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTime UploadDate { get; set; }
+        public string File { get; set; } // do not change it to byte[]
+        public Chat Chat { get; set; }
         public User UploadedBy { get; set; }
     }
 }

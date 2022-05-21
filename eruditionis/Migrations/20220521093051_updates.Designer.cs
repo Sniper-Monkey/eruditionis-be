@@ -10,8 +10,8 @@ using eruditionis.Database;
 namespace eruditionis.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220520194922_setEnt3")]
-    partial class setEnt3
+    [Migration("20220521093051_updates")]
+    partial class updates
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -28,6 +28,9 @@ namespace eruditionis.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Chats");
@@ -40,19 +43,24 @@ namespace eruditionis.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int?>("ChatId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("File")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int?>("UploadedById")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
 
                     b.HasIndex("UploadedById");
 
@@ -116,29 +124,32 @@ namespace eruditionis.Migrations
 
             modelBuilder.Entity("eruditionis.Database.Models.Document", b =>
                 {
+                    b.HasOne("eruditionis.Database.Models.Chat", "Chat")
+                        .WithMany()
+                        .HasForeignKey("ChatId");
+
                     b.HasOne("eruditionis.Database.Models.User", "UploadedBy")
                         .WithMany()
                         .HasForeignKey("UploadedById");
+
+                    b.Navigation("Chat");
 
                     b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("eruditionis.Database.Models.Message", b =>
                 {
-                    b.HasOne("eruditionis.Database.Models.Chat", null)
-                        .WithMany("Messages")
+                    b.HasOne("eruditionis.Database.Models.Chat", "Chat")
+                        .WithMany()
                         .HasForeignKey("ChatId");
 
                     b.HasOne("eruditionis.Database.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
 
-                    b.Navigation("User");
-                });
+                    b.Navigation("Chat");
 
-            modelBuilder.Entity("eruditionis.Database.Models.Chat", b =>
-                {
-                    b.Navigation("Messages");
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

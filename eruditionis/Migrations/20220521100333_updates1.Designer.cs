@@ -10,8 +10,8 @@ using eruditionis.Database;
 namespace eruditionis.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220520195708_setEnt6")]
-    partial class setEnt6
+    [Migration("20220521100333_updates1")]
+    partial class updates1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -43,19 +43,24 @@ namespace eruditionis.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int?>("ChatId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("File")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UploadDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("UploadedById")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
 
                     b.HasIndex("UploadedById");
 
@@ -119,9 +124,15 @@ namespace eruditionis.Migrations
 
             modelBuilder.Entity("eruditionis.Database.Models.Document", b =>
                 {
+                    b.HasOne("eruditionis.Database.Models.Chat", "Chat")
+                        .WithMany()
+                        .HasForeignKey("ChatId");
+
                     b.HasOne("eruditionis.Database.Models.User", "UploadedBy")
                         .WithMany()
                         .HasForeignKey("UploadedById");
+
+                    b.Navigation("Chat");
 
                     b.Navigation("UploadedBy");
                 });
