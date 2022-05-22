@@ -1,10 +1,12 @@
 ﻿using eruditionis.Database;
 using eruditionis.Database.Models;
+using eruditionis.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace eruditionis.Controllers
 {
@@ -14,48 +16,69 @@ namespace eruditionis.Controllers
     {
         private readonly ILogger<DocumentController> _logger;
         private readonly DataContext _context;
+        private readonly FileSystemService _fileSystemService;
 
-        public DocumentController(ILogger<DocumentController> logger, DataContext context)
+        public DocumentController(ILogger<DocumentController> logger, DataContext context, FileSystemService fileSystemService)
         {
             _logger = logger;
             _context = context;
+            _fileSystemService = fileSystemService;
         }
 
         [HttpGet]
         [Route("/[action]")]
-        public IEnumerable<Document> ReadAll()
+        public async Task<IActionResult> ReadAll()
         {
-            return _context.Documents
+            var result = await _context.Documents
                 .Include(d => d.UploadedBy)
                 .Include(d => d.Chat)
-                .ToArray();
+                .ToListAsync();
+
+            return Ok(result);
         }
 
         [HttpGet]
-        public Document Read(int docId)
+        public async Task<IActionResult> Read(int docId)
         {
-            return _context.Documents
+            var result = await _context.Documents
                 .Include(d => d.UploadedBy)
                 .Include(d => d.Chat)
-                .First(d => d.Id == docId);
+                .FirstOrDefaultAsync(d => d.Id == docId);
+
+            if(result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
         }
 
         [HttpGet]
         [Route("/[action]")]
-        public object ReadTitle(int docId)
+        public async Task<IActionResult> ReadTitle(int docId)
         {
-            return new { Title =
-                _context.Documents
+            var result = await _context.Documents
                     .Include(d => d.UploadedBy)
                     .Include(d => d.Chat)
-                    .First(d => d.Id == docId)
-                    .Title };
+                    .FirstOrDefaultAsync(d => d.Id == docId);
+
+            if(result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result.Title);
         }
 
         [HttpPost]
-        public IActionResult Create(Document document)
+        public async Task<IActionResult> Create(PostDocumentViewModel documentVM)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Name.ToLower() == document.UploadedBy.Name.ToLower());
+            var user = _context.Users.FirstOrDefault(u => u.Name.ToLower() == documentVM.UserName.ToLower());
+            Document document = new Document
+            {
+                Title = documentVM.Title,
+                Description = documentVM.Description
+            };
             if (user != null)
             {
                 document.UploadedBy = user;
@@ -66,20 +89,30 @@ namespace eruditionis.Controllers
             }
 
             document.Chat = null;
-            document.Id = 0;
 
             _context.Add<Document>(document);
             _context.SaveChanges();
 
-            return Ok();
+            var route = await _fileSystemService.Create(documentVM.File, document.Id);
+
+            document.File = route;
+            _context.Update(document);
+            await _context.SaveChangesAsync();
+
+            return Ok(document);
         }
 
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var doc = _context.Documents.First(d => d.Id == id);
+            var doc = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id);
+            if(doc == null)
+            {
+                return NotFound();
+            }
+
             _context.Documents.Remove(doc);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
