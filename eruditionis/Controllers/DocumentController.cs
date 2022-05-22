@@ -35,7 +35,13 @@ namespace eruditionis.Controllers
                 .Include(d => d.Chat)
                 .ToListAsync();
 
-            return Ok(result);
+            return Ok(result.Select(s => new {
+                Id = s.Id,
+                Title = s.Title,
+                Description = s.Description,
+                Chat = s.Chat,
+                UploadedBy = s.UploadedBy
+            }).ToList());
         }
 
         [HttpGet]
@@ -51,6 +57,8 @@ namespace eruditionis.Controllers
                 return NotFound();
             }
 
+            var file = await _fileSystemService.GetFile(result.File);
+            result.File = file;
             return Ok(result);
         }
 
