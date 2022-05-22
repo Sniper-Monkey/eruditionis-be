@@ -47,8 +47,13 @@ namespace eruditionis
                 stream.Close();
             }
 
-            response = "Docs/" + docId + "/" + fileName + format;
+            response = "wwwroot/Docs/" + docId + "/" + fileName + format;
             return response;
+        }
+        public async Task<string> GetFile(string docPath)
+        {
+            var stream = await System.IO.File.ReadAllBytesAsync(docPath);
+            return Convert.ToBase64String(stream);
         }
     }
 }
