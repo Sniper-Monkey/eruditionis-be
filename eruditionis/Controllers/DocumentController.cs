@@ -4,6 +4,7 @@ using eruditionis.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -93,11 +94,17 @@ namespace eruditionis.Controllers
 
             _context.Add<Document>(document);
             _context.SaveChanges();
+            try
+            {
+                var route = await _fileSystemService.Create(documentVM.File, document.Id);
+                document.File = route;
+                _context.Update(document);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest("document file was not saved. Exception text:" + ex.Message);
+            }
 
-            var route = await _fileSystemService.Create(documentVM.File, document.Id);
-
-            document.File = route;
-            _context.Update(document);
             await _context.SaveChangesAsync();
 
             return Ok(document);
