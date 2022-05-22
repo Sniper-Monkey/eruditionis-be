@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace eruditionis.Controllers
 {
@@ -23,30 +24,30 @@ namespace eruditionis.Controllers
         }
 
         [HttpGet]
-        public ChatDto[] GetAllChats()
+        public async Task<IActionResult> GetAllChats()
         {
             var chats = _context.Chats.ToList();
             List<ChatDto> chatsDto = new List<ChatDto>();
 
             foreach (var chat in chats)
             {
-                int docId = _context.Documents.First(d => d.Chat.Id == chat.Id).Id;
+                var doc = await _context.Documents.FirstOrDefaultAsync(d => d.Chat.Id == chat.Id);
 
                 chatsDto.Add(new ChatDto()
                 {
                     Id = chat.Id,
                     Title = chat.Title,
-                    DocId = docId
-                });
+                    DocId = doc.Id
+            });
 
             }
 
-            return chatsDto.ToArray();
+            return Ok(chatsDto);
         }
 
 
         [HttpPost]
-        public IActionResult CreateChat(ChatDto chat)
+        public async Task<IActionResult> CreateChat(ChatDto chat)
         {
             Chat chatModel = new Chat(){Title = chat.Title};
 
@@ -60,9 +61,11 @@ namespace eruditionis.Controllers
 
             _context.Chats.Add(chatModel);
             doc.Chat = chatModel;
-            _context.SaveChanges();
+            await _context.Chats.AddAsync(chatModel);
+            _context.Update(doc);
+            await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(chatModel);
         }
 
     }

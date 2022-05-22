@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace eruditionis.Controllers
 {
@@ -20,19 +21,21 @@ namespace eruditionis.Controllers
             _context = context;
         }
         [HttpGet]
-        public Message[] GetAllMessages(int chatId)
+        public async Task<IActionResult> GetAllMessages(int chatId)
         {
-            return _context.Messages
+            var result = await _context.Messages
                 .Where(m => m.Chat.Id == chatId)
                 .Include(m => m.User)
                 .Include(m => m.Chat)
-                .ToArray();
+                .ToListAsync();
+
+            return Ok(result);
         }
 
         [HttpPost]
-        public IActionResult CreateMessage(Message message)
+        public async Task<IActionResult> CreateMessage(Message message)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Name.ToLower() == message.User.Name.ToLower());
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Name.ToLower() == message.User.Name.ToLower());
             if (user != null)
             {
                 message.User = user;
@@ -42,7 +45,7 @@ namespace eruditionis.Controllers
                 return BadRequest("no user with this Name");
             }
 
-            var chat = _context.Chats.FirstOrDefault(c => c.Id == message.Chat.Id);
+            var chat = await _context.Chats.FirstOrDefaultAsync(c => c.Id == message.Chat.Id);
             if (chat != null)
             {
                 message.Chat = chat;
@@ -54,8 +57,8 @@ namespace eruditionis.Controllers
 
             message.Id = 0;
 
-            _context.Messages.Add(message);
-            _context.SaveChanges();
+            await _context.Messages.AddAsync(message);
+            await _context.SaveChangesAsync();
 
             return Ok();
         }

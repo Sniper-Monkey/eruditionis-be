@@ -3,6 +3,7 @@ using eruditionis.Database.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace eruditionis.Controllers
 {
@@ -20,17 +21,17 @@ namespace eruditionis.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(User user)
+        public async Task<IActionResult> Create(User user)
         {
             user.Id = 0;
-
-            if (_context.Users.FirstOrDefault(u => u.Name.ToLower() == user.Name.ToLower()) != null)
+            var userFromDb = _context.Users.FirstOrDefault(u => u.Name.ToLower() == user.Name.ToLower());
+            if (userFromDb != null)
             {
                 return BadRequest("user with this name already exists");
             }
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
             return Ok();
         }
     }
