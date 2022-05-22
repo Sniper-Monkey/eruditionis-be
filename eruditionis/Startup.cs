@@ -37,6 +37,8 @@ namespace eruditionis
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "eruditionis", Version = "v1" });
             });
+
+            services.AddScoped<FileSystemService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,6 +52,8 @@ namespace eruditionis
             }
 
             app.UseHttpsRedirection();
+
+            app.UseStaticFiles();
 
             app.UseRouting();
 
